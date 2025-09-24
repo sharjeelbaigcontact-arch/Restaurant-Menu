@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Full Size Premium Slideshow</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .gallery {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .gallery img {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: auto;
+      height: auto;
+      max-width: 100vw;
+      max-height: 100vh;
+      transform: translate(-50%, -50%) scale(0.95);
+      opacity: 0;
+      object-fit: contain;
+      border-radius: 12px;
+      will-change: transform, opacity;
+    }
+
+    .gallery img.active {
+      z-index: 10;
+      opacity: 1;
+    }
+
+    .overlay-text {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      font-size: 1.8em;
+      text-shadow: 0 5px 15px rgba(0, 0, 0, 0.7);
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="gallery">
+    <img src="https://ik.imagekit.io/v1idpbbmg/Menu.jpg?updatedAt=1758696110032" class="active">
+    <img src="https://ik.imagekit.io/v1idpbbmg/Real.jpg?updatedAt=1758696109873">
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+  <script>
+    const images = document.querySelectorAll(".gallery img");
+    let current = 0, isAnimating = false;
+
+    function showImage(nextIndex) {
+      if (isAnimating || nextIndex === current) return;
+      isAnimating = true;
+      const currentImg = images[current];
+      const nextImg = images[nextIndex];
+
+      gsap.to(currentImg, { opacity: 0, scale: 0.9, duration: 0.6, ease: "power1.inOut", onComplete: () => { currentImg.classList.remove("active"); } });
+      gsap.fromTo(nextImg, { opacity: 0, scale: 0.95 }, { opacity: 1, scale: 1, duration: 0.6, ease: "power1.out", onComplete: () => { nextImg.classList.add("active"); isAnimating = false; } });
+
+      current = nextIndex;
+    }
+
+    // Scroll
+    let scrollTimeout;
+    window.addEventListener("wheel", (e) => {
+      if (scrollTimeout) return;
+      scrollTimeout = setTimeout(() => scrollTimeout = null, 500);
+      if (e.deltaY > 0) showImage((current + 1) % images.length);
+      else showImage((current - 1 + images.length) % images.length);
+    });
+
+    // Swipe
+    let startX = 0, startY = 0;
+    window.addEventListener("touchstart", (e) => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; });
+    window.addEventListener("touchend", (e) => {
+      let endX = e.changedTouches[0].clientX;
+      let endY = e.changedTouches[0].clientY;
+      if (Math.abs(startX - endX) > Math.abs(startY - endY)) {
+        if (startX > endX) showImage((current + 1) % images.length);
+        else showImage((current - 1 + images.length) % images.length);
+      } else {
+        if (startY > endY) showImage((current + 1) % images.length);
+        else showImage((current - 1 + images.length) % images.length);
+      }
+    });
+
+    // Keyboard arrows
+    window.addEventListener("keydown", (e) => {
+      if (["ArrowRight", "ArrowDown"].includes(e.key)) showImage((current + 1) % images.length);
+      if (["ArrowLeft", "ArrowUp"].includes(e.key)) showImage((current - 1 + images.length));
+    });
+
+    // Intro animation
+    window.addEventListener("load", () => {
+      gsap.fromTo(images[current], { opacity: 0, scale: 0.95 }, { opacity: 1, scale: 1, duration: 0.6, ease: "power1.out" });
+    });
+  </script>
+</body>
+
+</html>
